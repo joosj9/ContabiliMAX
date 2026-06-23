@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Módulo de Operaciones - ContabiliMAX</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="dynamic-bg"></div>
+    <div class="bg-overlay-waves"></div>
+
+    <nav class="navbar">
+        <div class="logo">Contabili<span>MAX</span></div>
+        <ul class="nav-links">
+            <li><a href="index.html">Teoría Financiera</a></li>
+            <li><a href="index(2).html" class="active">Módulo Práctico</a></li>
+            <li><a href="#manual-usuario" class="btn-manual" onclick="switchTab(event, 'tab-manual')">Manual de Usuario</a></li>
+        </ul>
+    </nav>
+
+    <div class="container animate-fade">
+        <section class="config-panel card" id="globalConfigPanel" style="padding: 20px;">
+            <div id="configFieldsContainer">
+                <h2>Configuración de la Entidad</h2>
+                <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center; margin-bottom: 15px;">
+                    <input type="text" id="companyName" placeholder="Escribe el nombre de la empresa..." autocomplete="off" style="flex: 2; min-width: 200px; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px;">
+                    
+                    <div style="min-width: 180px;">
+                        <select id="currencySelect" class="select-input" onchange="renderAll()" style="padding: 12px; border-radius: 8px; width: 100%; cursor: pointer; display: block; border: 1px solid var(--border-color); background-color: #fff;">
+                            <option value="C$ ">Córdoba (C$)</option>
+                            <option value="$ ">Dólar ($)</option>
+                        </select>
+                    </div>
+
+                    <button onclick="saveCompany()" class="btn-secondary" style="padding: 12px 20px;">Establecer Firma</button>
+                </div>
+                <p class="company-display">Organización Activa: <span id="currentCompany">No registrada</span></p>
+            </div>
+            
+            <div id="manualImageContainer" style="display: none; text-align: center; width: 100%; padding: 0; margin: 0 auto;">
+                <div class="manual-banner-placeholder"></div>
+            </div>
+        </section>
+
+        <div class="tabs-navigation">
+            <button class="tab-btn active" onclick="switchTab(event, 'tab-diario')">Libro Diario</button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-mayor')">Cuentas T (Libro Mayor)</button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-balance')">Balance de Comprobación</button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-ajustes')">Ajustes de Utilidad</button>
+        </div>
+
+        <div class="tabs-content">
+            <div id="tab-diario" class="tab-panel active">
+                <div class="workspace-grid">
+                    <section class="card entry-form-section">
+                        <h2>Ingreso de Movimientos</h2>
+                        <form id="journalForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Asiento de Destino</label>
+                                    <select id="txGroupIndex" class="select-input">
+                                        <option value="nuevo">+ Crear Nuevo Asiento Contable</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Tipo de Registro</label>
+                                    <select id="txType" class="select-input">
+                                        <option value="Asiento Contable">Asiento Contable Regular</option>
+                                        <option value="Asiento de Apertura">Asiento de Apertura</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Fecha Efectiva</label>
+                                    <input type="date" id="txDate" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Cuenta Financiera</label>
+                                    <input type="text" id="txAccount" placeholder="Ej. Ventas" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Debe</label>
+                                    <input type="number" id="txDebe" step="0.01" value="0" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>Haber</label>
+                                    <input type="number" id="txHaber" step="0.01" value="0" min="0">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn-primary w-100" id="btnSubmitForm">Procesar e Insertar Línea</button>
+                        </form>
+                    </section>
+
+                    <section class="card table-section">
+                        <h2>Libro Diario Cronológico</h2>
+                        <div class="table-responsive">
+                            <table id="diarioTable" class="excel-styled-table">
+                                <thead>
+                                    <tr class="excel-header-title">
+                                        <th colspan="3" style="text-align: center; background-color: #ffd6e0; color: #4a3f43;" id="diarioHeaderTitle">LIBRO DIARIO</th>
+                                    </tr>
+                                    <tr>
+                                        <th>DESCRIPCIÓN / CUENTA</th>
+                                        <th style="text-align: right; width: 140px;">DEBE</th>
+                                        <th style="text-align: right; width: 140px;">HABER</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                                <tfoot>
+                                    <tr class="total-row">
+                                        <td>TOTALES ACUMULADOS</td>
+                                        <td id="totalDebeDiario" style="text-align: right;">0,00</td>
+                                        <td id="totalHaberDiario" style="text-align: right;">0,00</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <div id="tab-mayor" class="tab-panel">
+                <section class="card t-accounts-section">
+                    <h2>Libro Mayor (Esquemas de Cuenta T)</h2>
+                    <div class="t-accounts-container" id="mayorContainer"></div>
+                </section>
+            </div>
+
+            <div id="tab-balance" class="tab-panel">
+                <section class="card balance-section">
+                    <h2>Balance de Comprobación General</h2>
+                    <div class="table-responsive">
+                        <table id="balanceTable" class="bordered-table">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2">Cuenta Financiera</th>
+                                    <th colspan="2" style="text-align: center;">Movimientos</th>
+                                    <th colspan="2" style="text-align: center;">Saldos</th>
+                                </tr>
+                                <tr>
+                                    <th>Deudor</th>
+                                    <th>Acreedor</th>
+                                    <th>Deudor</th>
+                                    <th>Acreedor</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                            <tfoot>
+                                <tr class="total-row">
+                                    <td>Totales Simétricos</td>
+                                    <td id="balMovDeudor">0,00</td>
+                                    <td id="balMovAcreedor">0,00</td>
+                                    <td id="balSaldoDeudor">0,00</td>
+                                    <td id="balSaldoAcreedor">0,00</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <div id="tab-ajustes" class="tab-panel">
+                <section class="card analitico-results-section animate-fade">
+                    <div class="results-header">
+                        <h2>Cálculo de Utilidad o Pérdida Bruta</h2>
+                        <span class="badge-metodo">Método Pormenorizado / Analítico</span>
+                    </div>
+                    <p class="instruction-text">Los estados financieros e indicadores se determinan automáticamente cruzando los saldos del Libro Mayor. Digite el valor obtenido mediante el conteo físico de su inventario de cierre:</p>
+                    
+                    <div class="inventory-input-container">
+                        <label for="invFinalInput"><strong>Inventario Final (Cierre Físico):</strong></label>
+                        <input type="number" id="invFinalInput" value="0" step="0.01" min="0" oninput="renderAll()">
+                    </div>
+
+                    <div class="formulas-grid" id="formulasGridContainer"></div>
+                </section>
+            </div>
+
+            <div id="tab-manual" class="tab-panel">
+                <section class="card manual-section animate-fade">
+                    <h2>Manual de Usuario - ContabiliMAX</h2>
+                    <p class="instruction-text">Siga estos pasos estructurados para operar el sistema analítico y procesar la información correctamente:</p>
+                    <div class="manual-grid">
+                        <div class="manual-step">
+                            <h4>1. Configuración de Entidad</h4>
+                            <p>Escriba el nombre de la organización en el panel superior, seleccione el tipo de divisa (Córdobas o Dólares) y presione <strong>Establecer Firma</strong>.</p>
+                        </div>
+                        <div class="manual-step">
+                            <h4>2. Apertura Obligatoria</h4>
+                            <p>Antes de registrar transacciones corrientes, debe seleccionar en Tipo de Registro la opción <strong>Asiento de Apertura</strong> e ingresar los saldos iniciales de las cuentas.</p>
+                        </div>
+                        <div class="manual-step">
+                            <h4>3. Registro en Diario</h4>
+                            <p>Para operaciones subsiguientes, mantenga seleccionado <strong>Asiento Contable Regular</strong>. Introduzca la cuenta, asigne el valor al Debe o al Haber (nunca ambos en la misma línea) y presione insertar.</p>
+                        </div>
+                        <div class="manual-step">
+                            <h4>4. Consulta Automatizada</h4>
+                            <p>Navegue por las pestañas superiores para visualizar en tiempo real cómo se estructuran las Cuentas T del Libro Mayor y la simetría del Balance de Comprobación.</p>
+                        </div>
+                        <div class="manual-step">
+                            <h4>5. Determination de Utilidades</h4>
+                            <p>En la pestaña <strong>Ajustes de Utilidad</strong>, ingrese el monto obtenido del inventario físico final. El sistema calculará automáticamente las Ventas Netas, Costo de Ventas y el Margen Bruto.</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
